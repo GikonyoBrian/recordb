@@ -13,7 +13,7 @@ A simple script using recordb module;
 >>> rdb = recordb.Recordb() # Initialize the database object
 >>> rdb.createdb("people") # Create a new database
 >>> rdb.opendb("people") # Open the database
->>> # Create a old doc in people database with man and woman keys
+>>> # Create a old doc in people database with "husband" and "wife" keys
 >>> rdb.createdoc("old", ["husband", "wife"]) 
 >>> rdb.insert_to_doc("old", {"husband": "George Foreman", "wife": "Elsie Wise"})# insert key-value pairs to database
 >>> rdb.insert_to_doc("old", {"husband": "Clark Kent", "wife": "Lois Lane"})
