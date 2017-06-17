@@ -13,15 +13,16 @@ A simple script using recordb module;
 >>> rdb = recordb.Recordb() # Initialize the database object
 >>> rdb.createdb("people") # Create a new database
 >>> rdb.opendb("people") # Open the database
->>> rdb.createdoc("old", ["husband", "wife"]) # Create a young doc in people database
->>>	# with man and woman keys
+>>> # Create a young doc in people database with man and woman keys
+>>> rdb.createdoc("old", ["husband", "wife"]) 
 >>> rdb.insert_to_doc("old", {"husband": "George Foreman", "wife": "Elsie Wise"})# insert key-value pairs to database
 >>> rdb.insert_to_doc("old", {"husband": "Clark Kent", "wife": "Lois Lane"})
 >>> result = rdb.search_from_doc("old", {"wife": "Lois Lane"})
 >>> print result # list of all records in old doc containing the key "wife" whose value is "Lois Lane"
->>> rdb.update_in_doc("old", {"wife": "Lois Lane"}, {"husband": "Superman"}) # update the value of "husband" key of the
->>> # record which has the "wife" key's value as "Lois Lane"
->>> rdb.delete_from_doc("old", {"husband": "George Foreman"}) # Delete record where value of "husband" key is "George Foreman" 
+>>> # update the value of "husband" key of the record which has the "wife" key's value as "Lois Lane"
+>>> rdb.update_in_doc("old", {"wife": "Lois Lane"}, {"husband": "Superman"}) 
+>>> # Delete record where value of "husband" key is "George Foreman" 
+>>> rdb.delete_from_doc("old", {"husband": "George Foreman"}) 
 >>> rdb.dropdoc("old") # Drop/delete the old doc
 >>> rdb.closedb() # Close the database
 >>> rdb.dropdb() # Delete the database
