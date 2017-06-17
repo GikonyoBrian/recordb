@@ -78,7 +78,6 @@ class Recordb:
 				for record in doc_data["records"]:
 					if self.check_for_key_value_pairs_in_dict(conditions_dictionary, record):
 						doc_data["records"].remove(record)
-						print doc_data["records"]
 					else:
 						continue
 				doc_data["timestamp"] = time.asctime()
