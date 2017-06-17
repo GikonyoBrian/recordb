@@ -142,3 +142,11 @@ class Recordb:
 	def get_docs(self):
 		docs = [doc.replace(".gik", "") for doc in os.listdir(self.database)]
 		return docs
+
+	def get_doc_keys(self, doc_name):
+		doc_path = self.database + "/" + doc_name + ".gik"
+		with open(doc_path, 'rb+') as doc:
+			doc_data = ujson.load(doc)
+			doc_keys = doc_data["keys"]
+			doc.close()
+			return doc_keys
