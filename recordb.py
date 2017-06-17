@@ -1,6 +1,7 @@
 import os
 import time
 import ujson
+import fcntl
 import shutil
 
 
@@ -54,14 +55,17 @@ class Recordb:
 			doc_path = self.database + "/" + doc_name + ".gik"
 			keys = [key.decode('utf8', 'strict') for key in insert_values.keys()]
 			with open(doc_path, 'r+b') as doc:
+				fcntl.flock(doc, fcntl.LOCK_EX)
 				doc_data = ujson.load(doc)
 				doc.seek(0)
 				if keys.sort() == doc_data["keys"].sort():
 					doc_data["records"].append(insert_values)
 					doc_data["timestamp"] = time.asctime()
 					ujson.dump(doc_data, doc)
+					fcntl.flock(doc, fcntl.LOCK_UN)
 					doc.close()
 				else:
+					fcntl.flock(doc, fcntl.LOCK_UN)
 					doc.close()
 					raise KeyError("Keys for data provided do not match those in the doc.")
 		else:
@@ -72,6 +76,7 @@ class Recordb:
 		if isinstance(conditions_dictionary, dict):
 			doc_path = self.database + "/" + doc_name + ".gik"
 			with open(doc_path, 'rb+') as doc:
+				fcntl.flock(doc, fcntl.LOCK_EX)
 				doc_data = ujson.load(doc)
 				doc.seek(0)
 				doc.truncate(0)
@@ -82,6 +87,7 @@ class Recordb:
 						continue
 				doc_data["timestamp"] = time.asctime()
 				ujson.dump(doc_data, doc)
+				fcntl.flock(doc, fcntl.LOCK_UN)
 				doc.close()
 		else:
 			raise TypeError("Condition data is not a dictionary.")
@@ -90,6 +96,7 @@ class Recordb:
 		if isinstance(conditions_dictionary, dict) and isinstance(new_key_value_dict, dict):
 			doc_path = self.database + "/" + doc_name + ".gik"
 			with open(doc_path, 'rb+') as doc:
+				fcntl.flock(doc, fcntl.LOCK_EX)
 				doc_data = ujson.load(doc)
 				doc.seek(0)
 				doc.truncate(0)
@@ -101,6 +108,7 @@ class Recordb:
 						continue
 				doc_data["timestamp"] = time.asctime()
 				ujson.dump(doc_data, doc)
+				fcntl.flock(doc, fcntl.LOCK_UN)
 				doc.close()
 		else:
 			raise TypeError("Condition data or update data is not a dictionary")
@@ -110,6 +118,7 @@ class Recordb:
 		if isinstance(conditions_dictionary, dict):
 			doc_path = self.database + "/" + doc_name + ".gik"
 			with open(doc_path, 'rb+') as doc:
+				fcntl.flock(doc, fcntl.LOCK_EX)
 				doc_data = ujson.load(doc)
 				results_list = list()
 				for record in doc_data["records"]:
@@ -117,6 +126,7 @@ class Recordb:
 						results_list.append(record)
 					else:
 						continue
+				fcntl.flock(doc, fcntl.LOCK_UN)
 				doc.close()
 				return results_list
 		else:
@@ -145,7 +155,9 @@ class Recordb:
 	def get_doc_keys(self, doc_name):
 		doc_path = self.database + "/" + doc_name + ".gik"
 		with open(doc_path, 'rb+') as doc:
+			fcntl.flock(doc, fcntl.LOCK_EX)
 			doc_data = ujson.load(doc)
 			doc_keys = doc_data["keys"]
+			fcntl.flock(doc, fcntl.LOCK_UN)
 			doc.close()
 			return doc_keys
