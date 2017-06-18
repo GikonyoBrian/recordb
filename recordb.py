@@ -15,7 +15,7 @@ class Recordb:
 		decoded_key_value_dict_keys = [key.decode('utf8', 'strict') for key in key_value_dict.keys()]
 		if all(key in dictionary.keys() for key in decoded_key_value_dict_keys):
 			for key, value in zip(key_value_dict.keys(), key_value_dict.values()):
-				if dictionary[key.decode('utf8', 'strict')] == value.decode('utf8', 'strict'):
+				if dictionary[key.decode('utf8', 'strict')] == value:
 					key_values_in_both_dicts.append(key)
 			if len(key_values_in_both_dicts) == key_value_dict_length:
 				return True
@@ -24,12 +24,57 @@ class Recordb:
 		else:
 			return False
 
-	def check_for_keys_in_dict(self, keys_list, dictionary):
-			decoded_keys_list = [key.decode('utf8', 'strict') for key in keys_list]
-			if all(key in dictionary.keys() for key in decoded_keys_list):
+	def check_for_key_value_pair_in_dict_greater_than(self, key_value_dict, dictionary):
+		key = key_value_dict.keys()[0]
+		value = key_value_dict.values()[0]
+		if len(key_value_dict.keys()) == 1 and len(key_value_dict.values()) == 1:
+			if dictionary[key.decode('utf8', 'strict')] > value:
 				return True
 			else:
 				return False
+		else:
+			raise TypeError("One dict key-value pair expected.")
+
+	def check_for_key_value_pair_in_dict_greater_than_or_equal_to(self, key_value_dict, dictionary):
+		key = key_value_dict.keys()[0]
+		value = key_value_dict.values()[0]
+		if len(key_value_dict.keys()) == 1 and len(key_value_dict.values()) == 1:
+			if dictionary[key.decode('utf8', 'strict')] >= value:
+				return True
+			else:
+				return False
+		else:
+			raise TypeError("One dict key-value pair expected.")
+
+	def check_for_key_value_pair_in_dict_less_than(self, key_value_dict, dictionary):
+		key = key_value_dict.keys()[0]
+		value = key_value_dict.values()[0]
+		if len(key_value_dict.keys()) == 1 and len(key_value_dict.values()) == 1:
+			if dictionary[key.decode('utf8', 'strict')] < value:
+				return True
+			else:
+				return False
+		else:
+			raise TypeError("One dict key-value pair expected.")
+
+	def check_for_key_value_pair_in_dict_less_than_or_equal_to(self, key_value_dict, dictionary):
+		key = key_value_dict.keys()[0]
+		value = key_value_dict.values()[0]
+		if len(key_value_dict.keys()) == 1 and len(key_value_dict.values()) == 1:
+			if dictionary[key.decode('utf8', 'strict')] <= value:
+				return True
+			else:
+				return False
+		else:
+			raise TypeError("One dict key-value pair expected.")
+
+
+	def check_for_keys_in_dict(self, keys_list, dictionary):
+		decoded_keys_list = [key.decode('utf8', 'strict') for key in keys_list]
+		if all(key in dictionary.keys() for key in decoded_keys_list):
+			return True
+		else:
+			return False
 
 	
 	def createdb(self, database_name):
@@ -76,65 +121,126 @@ class Recordb:
 			raise TypeError("Insert parameter is not a list of dictionaries.")
 
 
-	def delete_from_doc(self, doc_name, conditions_dictionary):
-		if isinstance(conditions_dictionary, dict):
-			doc_path = self.database + "/" + doc_name + ".gik"
-			with open(doc_path, 'rb+') as doc:
-				fcntl.flock(doc, fcntl.LOCK_EX)
-				doc_data = ujson.load(doc)
-				doc.seek(0)
-				doc.truncate(0)
-				for record in doc_data["records"]:
-					if self.check_for_key_value_pairs_in_dict(conditions_dictionary, record):
-						doc_data["records"].remove(record)
-					else:
-						continue
-				doc_data["timestamp"] = time.asctime()
-				ujson.dump(doc_data, doc)
-				fcntl.flock(doc, fcntl.LOCK_UN)
-				doc.close()
+	def delete_from_doc(self, doc_name, conditions_dictionary, condition_statement= ""):
+		if condition_statement in ["", "greater-than", "less-than", "greater-than-or-equal-to", "less-than-or-equal-to"]:
+			if isinstance(conditions_dictionary, dict):
+				doc_path = self.database + "/" + doc_name + ".gik"
+				with open(doc_path, 'rb+') as doc:
+					fcntl.flock(doc, fcntl.LOCK_EX)
+					doc_data = ujson.load(doc)
+					doc.seek(0)
+					doc.truncate(0)
+					for record in doc_data["records"]:
+						if self.check_for_keys_in_dict(conditions_dictionary, record):
+							if condition_statement == "":
+								if self.check_for_key_value_pairs_in_dict(conditions_dictionary, record):
+									doc_data["records"].remove(record)
+							elif condition_statement == "greater-than":
+								if self.check_for_key_value_pair_in_dict_greater_than(conditions_dictionary, record):
+									doc_data["records"].remove(record)
+							elif condition_statement == "less-than":
+								if self.check_for_key_value_pair_in_dict_less_than(conditions_dictionary, record):
+									doc_data["records"].remove(record)
+							elif condition_statement == "greater-than-or-equal-to":
+								if self.check_for_key_value_pair_in_dict_greater_than_or_equal_to(conditions_dictionary, record):
+									doc_data["records"].remove(record)
+							elif condition_statement == "less-than-or-equal-to":
+								if self.check_for_key_value_pair_in_dict_less_than_or_equal_to(conditions_dictionary, record):
+									doc_data["records"].remove(record)
+							else:
+								continue
+						else:
+							continue
+					doc_data["timestamp"] = time.asctime()
+					ujson.dump(doc_data, doc)
+					fcntl.flock(doc, fcntl.LOCK_UN)
+					doc.close()
+			else:
+				raise TypeError("Condition data is not a dictionary.")
 		else:
-			raise TypeError("Condition data is not a dictionary.")
+			raise TypeError("Undefined condition.")
 
-	def update_in_doc(self, doc_name, conditions_dictionary, new_key_value_dict):
-		if isinstance(conditions_dictionary, dict) and isinstance(new_key_value_dict, dict):
-			doc_path = self.database + "/" + doc_name + ".gik"
-			with open(doc_path, 'rb+') as doc:
-				fcntl.flock(doc, fcntl.LOCK_EX)
-				doc_data = ujson.load(doc)
-				doc.seek(0)
-				doc.truncate(0)
-				for record in doc_data["records"]:
-					if self.check_for_keys_in_dict(new_key_value_dict, record) and self.check_for_key_value_pairs_in_dict(conditions_dictionary, record):
-						for key in new_key_value_dict.keys():
-							record[key] = new_key_value_dict[key]
-					else:
-						continue
-				doc_data["timestamp"] = time.asctime()
-				ujson.dump(doc_data, doc)
-				fcntl.flock(doc, fcntl.LOCK_UN)
-				doc.close()
+	def update_in_doc(self, doc_name, conditions_dictionary, new_key_value_dict, condition_statement=""):
+		if condition_statement in ["", "greater-than", "less-than", "greater-than-or-equal-to", "less-than-or-equal-to"]:
+			if isinstance(conditions_dictionary, dict) and isinstance(new_key_value_dict, dict):
+				doc_path = self.database + "/" + doc_name + ".gik"
+				with open(doc_path, 'rb+') as doc:
+					fcntl.flock(doc, fcntl.LOCK_EX)
+					doc_data = ujson.load(doc)
+					doc.seek(0)
+					doc.truncate(0)
+					for record in doc_data["records"]:
+						if self.check_for_keys_in_dict(new_key_value_dict, record):
+							if condition_statement == "":
+								if self.check_for_key_value_pairs_in_dict(conditions_dictionary, record):
+									for key in new_key_value_dict.keys():
+										record[key] = new_key_value_dict[key]
+							elif condition_statement == "greater-than":
+								if self.check_for_key_value_pair_in_dict_greater_than(conditions_dictionary, record):
+									for key in new_key_value_dict.keys():
+										record[key] = new_key_value_dict[key]
+							elif condition_statement == "less-than":
+								if self.check_for_key_value_pair_in_dict_less_than(conditions_dictionary, record):
+									for key in new_key_value_dict.keys():
+										record[key] = new_key_value_dict[key]
+							elif condition_statement == "greater-than-or-equal-to":
+								if self.check_for_key_value_pair_in_dict_greater_than_or_equal_to(conditions_dictionary, record):
+									for key in new_key_value_dict.keys():
+										record[key] = new_key_value_dict[key]
+							elif condition_statement == "less-than-or-equal-to":
+								if self.check_for_key_value_pair_in_dict_less_than_or_equal_to(conditions_dictionary, record):
+									for key in new_key_value_dict.keys():
+										record[key] = new_key_value_dict[key]
+							else:
+								continue
+						else:
+							continue
+					doc_data["timestamp"] = time.asctime()
+					ujson.dump(doc_data, doc)
+					fcntl.flock(doc, fcntl.LOCK_UN)
+					doc.close()
+			else:
+				raise TypeError("Condition data or update data is not a dictionary")
 		else:
-			raise TypeError("Condition data or update data is not a dictionary")
+			raise TypeError("Undefined condition.")
 						 
 
-	def search_from_doc(self, doc_name, conditions_dictionary):
-		if isinstance(conditions_dictionary, dict):
-			doc_path = self.database + "/" + doc_name + ".gik"
-			with open(doc_path, 'rb+') as doc:
-				fcntl.flock(doc, fcntl.LOCK_EX)
-				doc_data = ujson.load(doc)
-				results_list = list()
-				for record in doc_data["records"]:
-					if self.check_for_key_value_pairs_in_dict(conditions_dictionary, record):
-						results_list.append(record)
-					else:
-						continue
-				fcntl.flock(doc, fcntl.LOCK_UN)
-				doc.close()
-				return results_list
+	def search_from_doc(self, doc_name, conditions_dictionary, condition_statement=""):
+		if condition_statement in ["", "greater-than", "less-than", "greater-than-or-equal-to", "less-than-or-equal-to"]:
+			if isinstance(conditions_dictionary, dict):
+				doc_path = self.database + "/" + doc_name + ".gik"
+				with open(doc_path, 'rb+') as doc:
+					fcntl.flock(doc, fcntl.LOCK_EX)
+					doc_data = ujson.load(doc)
+					results_list = list()
+					for record in doc_data["records"]:
+						if self.check_for_keys_in_dict(conditions_dictionary, record):
+							if condition_statement == "":
+								if self.check_for_key_value_pairs_in_dict(conditions_dictionary, record):
+									results_list.append(record)
+							elif condition_statement == "greater-than":
+								if self.check_for_key_value_pair_in_dict_greater_than(conditions_dictionary, record):
+									results_list.append(record)
+							elif condition_statement == "less-than":
+								if self.check_for_key_value_pair_in_dict_less_than(conditions_dictionary, record):
+									results_list.append(record)
+							elif condition_statement == "greater-than-or-equal-to":
+								if self.check_for_key_value_pair_in_dict_greater_than_or_equal_to(conditions_dictionary, record):
+									results_list.append(record)
+							elif condition_statement == "less-than-or-equal-to":
+								if self.check_for_key_value_pair_in_dict_less_than_or_equal_to(conditions_dictionary, record):
+									results_list.append(record)
+							else:
+								continue
+						else:
+							continue
+					fcntl.flock(doc, fcntl.LOCK_UN)
+					doc.close()
+					return results_list
+			else:
+				raise TypeError("Condition data is not a dictionary.")
 		else:
-			raise TypeError("Condition data is not a dictionary.")
+			raise TypeError("Undefined condition.")
 
 	def dropdoc(self, doc_name):
 		doc_path = self.database + "/" + doc_name + ".gik"
