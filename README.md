@@ -15,8 +15,8 @@ A simple script using recordb module;
 >>> rdb.opendb("people") # Open the database
 >>> # Create a old doc in people database with "husband" and "wife" keys
 >>> rdb.createdoc("old", ["husband", "wife"]) 
->>> rdb.insert_to_doc("old", {"husband": "George Foreman", "wife": "Elsie Wise"})# insert key-value pairs to database
->>> rdb.insert_to_doc("old", {"husband": "Clark Kent", "wife": "Lois Lane"})
+>>> rdb.insert_to_doc("old", [{"husband": "George Foreman", "wife": "Elsie Wise"}])# insert a list of key-value pairs to database
+>>> rdb.insert_to_doc("old", [{"husband": "Clark Kent", "wife": "Lois Lane"}])
 >>> result = rdb.search_from_doc("old", {"wife": "Lois Lane"})
 >>> print result # list of all records in old doc containing the key "wife" whose value is "Lois Lane"
 >>> # update the value of "husband" key of the record which has the "wife" key's value as "Lois Lane"
