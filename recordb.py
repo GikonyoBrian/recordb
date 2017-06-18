@@ -50,26 +50,30 @@ class Recordb:
 			ujson.dump(doc_data, doc)
 			doc.close()
 		
-	def insert_to_doc(self, doc_name, insert_values):
-		if isinstance(insert_values, dict):
+	def insert_to_doc(self, doc_name, insert_values_list):
+		if isinstance(insert_values_list, list):
 			doc_path = self.database + "/" + doc_name + ".gik"
-			keys = [key.decode('utf8', 'strict') for key in insert_values.keys()]
 			with open(doc_path, 'r+b') as doc:
 				fcntl.flock(doc, fcntl.LOCK_EX)
 				doc_data = ujson.load(doc)
 				doc.seek(0)
-				if keys.sort() == doc_data["keys"].sort():
-					doc_data["records"].append(insert_values)
-					doc_data["timestamp"] = time.asctime()
-					ujson.dump(doc_data, doc)
-					fcntl.flock(doc, fcntl.LOCK_UN)
-					doc.close()
-				else:
-					fcntl.flock(doc, fcntl.LOCK_UN)
-					doc.close()
-					raise KeyError("Keys for data provided do not match those in the doc.")
+				for insert_values in insert_values_list:
+					if isinstance(insert_values, dict):
+						keys = [key.decode('utf8', 'strict') for key in insert_values.keys()]
+						if keys.sort() == doc_data["keys"].sort():
+							doc_data["records"].append(insert_values)
+						else:
+							fcntl.flock(doc, fcntl.LOCK_UN)
+							doc.close()
+							raise KeyError("Keys for data provided do not match those in the doc.")
+					else:
+						raise TypeError("Insert data is not a dictionary.")
+				doc_data["timestamp"] = time.asctime()
+				ujson.dump(doc_data, doc)
+				fcntl.flock(doc, fcntl.LOCK_UN)
+				doc.close()
 		else:
-			raise TypeError("Insert data is not a dictionary.")
+			raise TypeError("Insert parameter is not a list of dictionaries.")
 
 
 	def delete_from_doc(self, doc_name, conditions_dictionary):
