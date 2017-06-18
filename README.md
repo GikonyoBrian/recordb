@@ -3,6 +3,11 @@
 Recordb library provides a fast and easy-to-use embedded database
 for Python.
 
+## Installation
+If pip is installed run the command;
+```
+pip install recordb
+```
 
 ## Quick start
 A simple script using recordb module;
@@ -53,4 +58,14 @@ You  can view the docs in a database once you've connected to it as follows;
  >>> rbd.opendb("people") 
  >>> keys = rbd.get_doc_keys("old")
  >>> print keys
+````
+You can insert multiple records at the same time as follows;
+````
+>>> rbd.createdoc("numbers", ["number"])
+>>> insert_list = list()
+>>> for x in xrange(1000000):
+>>> 	d = {"number": x}
+>>> 	insert_list.append(d)
+>>> 
+>>> rbd.insert_to_doc("numbers", insert_list)
 ````
