@@ -69,3 +69,52 @@ You can insert multiple records at the same time as follows;
 >>> 
 >>> rbd.insert_to_doc("numbers", insert_list)
 ````
+You can also query conditionally;
+````
+>>> rbd.search_from_doc("numbers", {"number": 5000}, condition_statement="greater-than"})
+````
+The statement above returns all the records whose "numbers" value is greater than 5000.
+````
+>>> rbd.search_from_doc("numbers", {"number": 5000}, condition_statement="less-than"})
+````
+The statement above returns all the records whose "numbers" value is less than 5000.
+````
+>>> rbd.search_from_doc("numbers", {"number": 5000}, condition_statement="greater-than-or-equal-to"})
+````
+The statement above returns all the records whose "numbers" value is greater than or equal to 5000.
+````
+>>> rbd.search_from_doc("numbers", {"number": 5000}, condition_statement="less-than-or-equal-to"})
+````
+The statement above returns all the records whose "numbers" value is less than or equal to 5000.
+```
+>>> rbd.update_in_doc("numbers", {"number": 5000}, {"number": 6789}, condition_statement="greater-than"})
+````
+The statement above updates all the records whose "numbers" value is greater than 5000 to 6789.
+````
+>>> rbd.update_in_doc("numbers", {"number": 5000}, {"number": 6789},condition_statement="less-than"})
+````
+The statement above updates all the records whose "numbers" value is less than 5000 to 6789.
+````
+>>> rbd.update_in_doc("numbers", {"number": 5000}, {"number": 6789},  condition_statement="greater-than-or-equal-to"})
+````
+The statement above updates all the records whose "numbers" value is greater than or equal to 5000 to 6789.
+````
+>>> rbd.update_in_doc("numbers", {"number": 5000}, {"number": 6789}, condition_statement="less-than-or-equal-to"})
+````
+The statement above updates all the records whose "numbers" value is less than or equal to 5000 to 6789.
+````
+>>> rbd.delete_from_doc("numbers", {"number": 5000}, condition_statement="greater-than"})
+````
+The statement above deletes all the records whose "numbers" value is greater than 5000.
+````
+>>> rbd.delete_from_doc("numbers", {"number": 5000}, condition_statement="less-than"})
+````
+The statement above deletes all the records whose "numbers" value is less than 5000.
+````
+>>> rbd.delete_from_doc("numbers", {"number": 5000}, condition_statement="greater-than-or-equal-to"})
+````
+The statement above deletes all the records whose "numbers" value is greater than or equal to 5000.
+````
+>>> rbd.delete_from_doc("numbers", {"number": 5000}, condition_statement="less-than-or-equal-to"})
+````
+The statement above deletes all the records whose "numbers" value is less than or equal to 5000.
