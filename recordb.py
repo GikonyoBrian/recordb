@@ -121,7 +121,7 @@ class Recordb:
 			raise TypeError("Insert parameter is not a list of dictionaries.")
 
 
-	def delete_from_doc(self, doc_name, conditions_dictionary, condition_statement= ""):
+	def delete_from_doc(self, doc_name, conditions_dictionary, condition_statement=""):
 		if condition_statement in ["", "greater-than", "less-than", "greater-than-or-equal-to", "less-than-or-equal-to"]:
 			if isinstance(conditions_dictionary, dict):
 				doc_path = self.database + "/" + doc_name + ".gik"
@@ -130,28 +130,29 @@ class Recordb:
 					doc_data = ujson.load(doc)
 					doc.seek(0)
 					doc.truncate(0)
-					for record in doc_data["records"]:
-						if self.check_for_keys_in_dict(conditions_dictionary, record):
-							if condition_statement == "":
-								if self.check_for_key_value_pairs_in_dict(conditions_dictionary, record):
-									doc_data["records"].remove(record)
-							elif condition_statement == "greater-than":
-								if self.check_for_key_value_pair_in_dict_greater_than(conditions_dictionary, record):
-									doc_data["records"].remove(record)
-							elif condition_statement == "less-than":
-								if self.check_for_key_value_pair_in_dict_less_than(conditions_dictionary, record):
-									doc_data["records"].remove(record)
-							elif condition_statement == "greater-than-or-equal-to":
-								if self.check_for_key_value_pair_in_dict_greater_than_or_equal_to(conditions_dictionary, record):
-									doc_data["records"].remove(record)
-							elif condition_statement == "less-than-or-equal-to":
-								if self.check_for_key_value_pair_in_dict_less_than_or_equal_to(conditions_dictionary, record):
-									doc_data["records"].remove(record)
-							else:
-								continue
-						else:
-							continue
+					records_from_file = doc_data["records"]
+					records_list = list()
+					records = filter(lambda r:self.check_for_keys_in_dict(conditions_dictionary, r), records_from_file)
+					if condition_statement == "":
+						records_list = filter(lambda r:not self.check_for_key_value_pairs_in_dict(conditions_dictionary, r), records)
+					elif condition_statement == "greater-than":
+						key = conditions_dictionary.keys()[0]
+						value = conditions_dictionary.values()[0]
+						records_list = filter(lambda r: r[key] <= value, records)
+					elif condition_statement == "less-than":
+						key = conditions_dictionary.keys()[0]
+						value = conditions_dictionary.values()[0]
+						records_list = filter(lambda r: r[key] >= value, records)
+					elif condition_statement == "greater-than-or-equal-to":
+						key = conditions_dictionary.keys()[0]
+						value = conditions_dictionary.values()[0]
+						records_list = filter(lambda r: r[key] < value, records)
+					elif condition_statement == "less-than-or-equal-to":
+						key = conditions_dictionary.keys()[0]
+						value = conditions_dictionary.values()[0]
+						records_list = filter(lambda r: r[key] > value, records)
 					doc_data["timestamp"] = time.asctime()
+					doc_data["records"] = records_list
 					ujson.dump(doc_data, doc)
 					fcntl.flock(doc, fcntl.LOCK_UN)
 					doc.close()
@@ -208,35 +209,29 @@ class Recordb:
 	def search_from_doc(self, doc_name, conditions_dictionary, condition_statement=""):
 		if condition_statement in ["", "greater-than", "less-than", "greater-than-or-equal-to", "less-than-or-equal-to"]:
 			if isinstance(conditions_dictionary, dict):
+				key = conditions_dictionary.keys()[0]
+				value = conditions_dictionary.values()[0]
 				doc_path = self.database + "/" + doc_name + ".gik"
 				with open(doc_path, 'rb+') as doc:
 					fcntl.flock(doc, fcntl.LOCK_EX)
 					doc_data = ujson.load(doc)
-					results_list = list()
-					for record in doc_data["records"]:
-						if self.check_for_keys_in_dict(conditions_dictionary, record):
-							if condition_statement == "":
-								if self.check_for_key_value_pairs_in_dict(conditions_dictionary, record):
-									results_list.append(record)
-							elif condition_statement == "greater-than":
-								if self.check_for_key_value_pair_in_dict_greater_than(conditions_dictionary, record):
-									results_list.append(record)
-							elif condition_statement == "less-than":
-								if self.check_for_key_value_pair_in_dict_less_than(conditions_dictionary, record):
-									results_list.append(record)
-							elif condition_statement == "greater-than-or-equal-to":
-								if self.check_for_key_value_pair_in_dict_greater_than_or_equal_to(conditions_dictionary, record):
-									results_list.append(record)
-							elif condition_statement == "less-than-or-equal-to":
-								if self.check_for_key_value_pair_in_dict_less_than_or_equal_to(conditions_dictionary, record):
-									results_list.append(record)
-							else:
-								continue
-						else:
-							continue
+					records_from_file = doc_data["records"]
+					records_list = list()
+					records = filter(lambda r:self.check_for_keys_in_dict(conditions_dictionary, r), records_from_file)
+					if condition_statement == "":
+						records_list = filter(lambda r:not self.check_for_key_value_pairs_in_dict(conditions_dictionary, r), records)
+					elif condition_statement == "greater-than":
+						records_list = filter(lambda r: r[key] > value, records)
+					elif condition_statement == "less-than":
+						records_list = filter(lambda r: r[key] < value, records)
+					elif condition_statement == "greater-than-or-equal-to":
+						records_list = filter(lambda r: r[key] >= value, records)
+					elif condition_statement == "less-than-or-equal-to":
+
+						records_list = filter(lambda r: r[key] <= value, records)
 					fcntl.flock(doc, fcntl.LOCK_UN)
 					doc.close()
-					return results_list
+					return records_list
 			else:
 				raise TypeError("Condition data is not a dictionary.")
 		else:
@@ -251,8 +246,9 @@ class Recordb:
 		self.database = ""
 
 	def dropdb(self, database_name):
-		assert (os.path.exists(database_name) and len(self.database) < 1),"Database " + database_name + " does not exist or is not closed."
-		shutil.rmtree(database_name)
+		database_path = ".data" + "/" + database_name
+		assert (os.path.exists(database_path) and len(self.database) < 1),"Database " + database_name + " does not exist or is not closed."
+		shutil.rmtree(database_path)
 
 	def get_databases(self):
 		databases = os.listdir(".data")
