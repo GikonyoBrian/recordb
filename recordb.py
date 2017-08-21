@@ -105,7 +105,7 @@ class Recordb:
 				for insert_values in insert_values_list:
 					if isinstance(insert_values, dict):
 						keys = [key.decode('utf8', 'strict') for key in insert_values.keys()]
-						if keys.sort() == doc_data["keys"].sort():
+						if keys in doc_data["keys"]:
 							doc_data["records"].append(insert_values)
 						else:
 							fcntl.flock(doc, fcntl.LOCK_UN)
